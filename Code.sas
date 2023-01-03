@@ -1,0 +1,76 @@
+*Importing the data;
+
+*Exploring & Preparing the data;
+
+TITLE "TRANSACTION SUMMARY
+
+Data: The data consists of two different workbooks . One provides customer and date level transactions for few years. Other provides customer response to campaign .
+
+Aim: To find out following-
+1.	Which month has highest and lowest number of transaction (Freq) 
+2.	Overall customer response (Freq)
+3.	Trend in customer expense (Univariate analysis)
+4.	Relation between customer expense and month of transaction (Univariate analysis of expense over each month) 
+5.	Sales per year ";
+run;
+
+PROC SORT DATA=WORK.IMPORT OUT=RESPONSE NODUPRECS DUPOUT=DUP_RES_REC;
+BY _all_;
+RUN;
+
+PROC SORT DATA=WORK.RESPONSE OUT=RESPONSE NODUPKEY DUPOUT=DUP_RES_REC;
+BY CUSTOMER_ID;
+RUN;
+
+PROC SORT DATA=WORK.IMPORT1 OUT=TRANSACTION NODUPRECS DUPOUT=DUP_TRAN_REC;
+BY _all_;
+RUN;
+
+DATA TRANSACTION;
+	SET WORK.transaction;
+	MONTH=MONTH(TRANS_DATE);
+	YEAR=YEAR(TRANS_DATE);
+	DAY=DAY(TRANS_DATE);
+	*YEAR = put(YEARS, 8.);
+	*MONTH=PUT(MONTHS,8.);
+	KEEP CUSTOMER_ID TRAN_AMOUNT TRANS_DATE MONTH YEAR DAY;	
+RUN;
+
+*Analysing the data;
+
+PROC FREQ DATA=WORK.response;
+	TABLES RESPONSE;
+	TITLE 'RESPONSE TO CAMPAIGN';
+RUN;
+
+PROC FREQ DATA=WORK.TRANSACTION;
+	TABLES MONTH;
+	TITLE 'MONTH-WISE TRANSACTION FOR ALL YEARS';
+RUN;
+
+PROC FREQ DATA=WORK.TRANSACTION;
+	TABLES YEAR;
+	TITLE 'YEAR-WISE TRANSACTION COUNT';
+RUN;
+
+PROC UNIVARIATE DATA=WORK.transaction;
+	VAR TRAN_AMOUNT;
+	TITLE 'TRANSACTION ANALYSIS FOR ALL YEARS';
+RUN;
+
+PROC TABULATE DATA=WORK.transaction;
+ CLASS YEAR;
+ VAR TRAN_AMOUNT;
+ TABLE YEAR, TRAN_AMOUNT*(MEAN MIN MAX SUM STD);
+ TITLE 'TRANSACTION ANALYSIS YEAR-WISE';
+RUN;
+
+PROC TABULATE DATA=WORK.transaction;
+ CLASS MONTH;
+ VAR TRAN_AMOUNT;
+ TABLE MONTH, TRAN_AMOUNT*(MEAN MIN MAX SUM STD);
+ WHERE YEAR=2014;
+ TITLE 'TRANSACTION ANALYSIS MONTH-WISE FOR YEAR 2014';
+RUN;
+
+*EXPORTING THE RESULT/
